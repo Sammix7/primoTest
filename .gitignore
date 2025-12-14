@@ -28,4 +28,5 @@ web/
 __pycache__/
 *.zip
 .env
+.env.*
 app/.venv
