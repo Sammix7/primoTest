@@ -2,40 +2,41 @@
 
 ## Overview
 
-You are developing a serverless REST API backend for a frontend application.
-Each function operates independently, is scalable, and stateless without shared code.
+You are developing a frontend React Application in Typescript with a serverless REST API backend in Python
+
+Each backend function operates independently, is scalable, and stateless without shared code.
 
 You have to always write unit and integration tests for each action.
+
 Unit tests must invoke directly the action function passing dictionaries.
 
-Integration test must use the requests library and perform HTTP requests to the deployed action endpoints,
-using as host the `OPSDEV_HOST` environment variable.
+Integration test must use the requests library and perform HTTP requests to the deployed action endpoints, using as host the `OPSDEV_HOST` environment variable.
 
 You can execute an unit test in isolation, as they use test containers.
-When you change the code of an action, before executing the integration test,
-you have to redeploy it with `ops ide deploy <package>/<action>`.
+
+When you change the code of an action, before executing the integration test, you have to redeploy it with `ops ide deploy <package>/<action>`.
 
 ## Goals
 
 - Code Python REST API backend functions
-- Support an existing JavaScript frontend (generated with Lovable) that **MUST NOT** be modified
 - Each deployed action becomes a REST endpoint at `/api/my/<package>/<name>`
+- Implement the frontend using TypeScrippt and React
 
-## Project Structure
+## Backend Project Structure
 
-### Action Organization
+### Backend Functions Organization
 
-- Actions are stored in `packages/<package>/<name>/*.py`
-- Each action requires a `packages/<package>/<name>/__main__.py` file
-- Each action has an `<action>.py` file with a `main` function
+- Functions are stored in `packages/<package>/<name>/*.py`
+- Each function requires a `packages/<package>/<name>/__main__.py` file
+- Each function has an `<function>.py` file with a `main` function
 - Unit tests: `tests/<package>/test_<name>.py`
 - Integration tests: `tests/<package>/test_<name>_int.py`
 
 ### Function Structure
 
 - Main function receives JSON object input and returns JSON object output (never arrays or primitives)
-- `__main__.py` ends with: `return {"body": <action>.<action>(args) }`
-- Write code in `<action>.py` file within the `<action>` module, **never** in `__main__.py`
+- `__main__.py` ends with: `return {"body": <function>.<function>(args) }`
+- Write code in `<function>.py` file within the `<function>` module, **never** in `__main__.py`
 - Always add annotation comments (format: `#--`) in `__main__.py`
 
 ### Common Annotation
@@ -56,44 +57,26 @@ Action that are invoked publicly also need to be exposed with
 
 ### Creating Actions
 
+When you need a new function create and deploy as follows
+
 ```bash
-ops lv new <action> <package>
+ops tk new  <package>/<function>
+ops ide deploy <package>/<function>
 ```
 
 ### Deployment
 
-Before any deployment you need credentials, stored in `~/.wskprops`.
-If there is not a `~/.wskprops` file you need to create it logging into the system:
-
-```bash
-ops ide login
-```
-
-# Deploy single action
-
-```bash
-ops ide deploy <package>/<action>
-```
-
-If you need to add parameters to the action, add them in `__main__.py`
-as a comment `#--param <PARAM_NAME>  <PARAM_VALUE>`
-
-A <PARAM_VALUE> is a shell expression and can use variables, in the format `"$VARIABLE`.
-
-Variables can be defined in `.env` or be one of the service secrets provided by the system.
-
-# Deploy all actions
-
-```bash
-ops ide deploy
-```
+Depoloyment is automatic when you change the code.
 
 ## Environment and Dependencies
 
 ### Limitations
 
-- Write **only Python code**, not JavaScript
-- Consider only `packages/*` and `tests/*` folders
+- Write **only Python code** for backend
+- Write **only Typescript code** for frontend
+- Consider only `packages/**` and `tests/**` files and for Python
+- Consider only `src/**` for Typescript
+- Place static assets under `public`
 - **NEVER** use `pip import` or `requirements.txt`
 - Use only the following approved libraries:
   - `requests`
@@ -105,21 +88,11 @@ ops ide deploy
 
 ### Secrets Management
 
-When needing a secret:
-
-1. Request addition to `.env` file
-2. Add metadata comment to `__main__.py`: `#--param <SECRET> "$<SECRET>"`
-3. Retrieve in main function (not `__main__.py`):
-
-```python
-<SECRET> = args.get("<SECRET>", os.getenv("<SECRET>"))
-```
-
 ## Service Integrations
 
 ### Redis Configuration
 
-When you need to use Redis, do always 3 things:
+When you need to use Redis, do always 2 things:
 
 1. Add to `__main__.py`:
 
@@ -136,7 +109,6 @@ prefix = args.get("REDIS_PREFIX"), os.getenv("REDIS_PREFIX"))
 # Always use prefix for all Redis Keys
 ```
 
-3. Ensure there is `ENABLE_REDIS` in the `tests/.env` file.
 
 ### PostgreSQL Configuration
 
@@ -153,8 +125,6 @@ When you need to use Postgres, do always 2 things:
 ```python
 dburl = args.get("POSTGRES_URL", os.getenv("POSTGRES_URL"))
 ```
-
-3. Ensure there is `ENABLE_REDIS` in the `tests/.env` file.
 
 ### S3 Configuration
 
@@ -182,11 +152,9 @@ store_s3 = boto3.client('s3', region_name='us-east-1', endpoint_url=url, aws_acc
 store_bucket = args.get("S3_BUCKET_DATA", os.getenv("S3_BUCKET_DATA"))
 ```
 
-3. Ensure there is `ENABLE_MINIO` in the `tests/.env` file.
-
 ### Milvus Configuration
 
-When you need to use Milvus, do always 3 things:
+When you need to use Milvus, do always 2 things:
 
 1. Add to `__main__.py`:
 
@@ -300,14 +268,251 @@ Supported methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`
 
 ## Best Practices
 
-### Authentication and Authorization
-
-- Web actions bypass OpenWhisk authentication
-- Implement your own auth logic (OAuth, JWT, etc.)
-- Use `__ow_user` when authentication annotation is enabled
-
 ### Content Type Handling
 
 - Specify the right extension for the URL
 - Default is `application/json` for objects, `text/html` for strings
 - Use base64 encoding for binary data
+
+## React Frontend Development
+
+### Overview
+
+The frontend is built with React and JavaScript. It communicates with the backend via REST API calls to the deployed serverless actions.
+
+### Project Structure
+
+```
+web/
+├── public/
+│   └── index.html
+├── src/
+│   ├── components/       # Reusable UI components
+│   ├── pages/            # Page-level components
+│   ├── hooks/            # Custom React hooks
+│   ├── services/         # API service modules
+│   ├── utils/            # Utility functions
+│   ├── App.jsx           # Root application component
+│   └── index.jsx         # Entry point
+├── package.json
+└── vite.config.js
+```
+
+### Development Commands
+
+Deployment is automatic when you change the code.
+
+### API Integration
+
+#### Service Module Pattern
+
+Create API service modules in `web/src/services/` to centralize backend communication:
+
+```javascript
+// web/src/services/api.js
+const API_BASE = '/api/my';
+
+export async function fetchJson(package, action, options = {}) {
+  const url = `${API_BASE}/${package}/${action}.json`;
+  const response = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function postJson(package, action, data) {
+  return fetchJson(package, action, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+```
+
+#### Example Service
+
+```javascript
+// web/src/services/users.js
+import { fetchJson, postJson } from './api';
+
+export const getUsers = () => fetchJson('users', 'list');
+export const createUser = (data) => postJson('users', 'create', data);
+export const getUser = (id) => fetchJson('users', `get/${id}`);
+```
+
+### Custom Hooks
+
+Create custom hooks for data fetching and state management:
+
+```javascript
+// web/src/hooks/useApi.js
+import { useState, useEffect } from 'react';
+
+export function useApi(fetchFn, deps = []) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchFn()
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, deps);
+
+  return { data, loading, error };
+}
+```
+
+### Component Guidelines
+
+#### Functional Components
+
+Always use functional components with hooks:
+
+```javascript
+// web/src/components/UserList.jsx
+import { useApi } from '../hooks/useApi';
+import { getUsers } from '../services/users';
+
+export function UserList() {
+  const { data: users, loading, error } = useApi(getUsers);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+#### Component File Structure
+
+Each component should be self-contained:
+
+```
+components/
+├── UserList/
+│   ├── UserList.jsx      # Component logic
+│   ├── UserList.css      # Component styles
+│   └── index.js          # Export
+```
+
+### State Management
+
+- Use React Context for global state (auth, theme, etc.)
+- Use `useState` and `useReducer` for local component state
+- Avoid external state libraries unless complexity demands it
+
+```javascript
+// web/src/context/AuthContext.jsx
+import { createContext, useContext, useState } from 'react';
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+
+  const login = async (credentials) => {
+    const userData = await postJson('auth', 'login', credentials);
+    setUser(userData);
+  };
+
+  const logout = () => setUser(null);
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export const useAuth = () => useContext(AuthContext);
+```
+
+### Routing
+
+Use React Router for client-side navigation:
+
+```javascript
+// web/src/App.jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Home } from './pages/Home';
+import { Dashboard } from './pages/Dashboard';
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+### Styling
+
+- Use CSS Modules or plain CSS files per component
+- Avoid inline styles except for dynamic values
+- Use CSS variables for theming
+
+```css
+/* web/src/components/Button/Button.css */
+.button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--color-primary-dark);
+}
+```
+
+### Error Handling
+
+Implement error boundaries for graceful failure:
+
+```javascript
+// web/src/components/ErrorBoundary.jsx
+import { Component } from 'react';
+
+export class ErrorBoundary extends Component {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong: {this.state.error.message}</div>;
+    }
+    return this.props.children;
+  }
+}
+```
+
+### Key Requirements Summary
+
+- Use functional components with hooks
+- Centralize API calls in service modules
+- Use custom hooks for data fetching
+- Implement proper error handling with error boundaries
+- Use React Context for global state
+- Use React Router for navigation
+- Keep components small and focused
+- Use CSS Modules or scoped CSS for styling
