@@ -4,17 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Trustable Workspace is a React frontend starter with serverless backend integration via OpenServerless. The frontend uses Vite, TypeScript, TailwindCSS, and shadcn/ui components.
+Trustable Workspace is a React frontend. The frontend uses Vite, TypeScript, TailwindCSS, and shadcn/ui components.
 
 ## Commands
 
 Never start a development enviroment.
 
-Aways assume there is a continuous deployment enviroment running.
+Always assume there is a continuous deployment enviroment running.
 
 ## Architecture
 
 **Frontend Stack:**
+
 - React 18 with TypeScript
 - Vite build tool
 - React Router v6 (HashRouter for serverless compatibility)
@@ -33,16 +34,6 @@ src/
 ├── App.tsx         # Root component with providers and routing
 └── main.tsx        # Entry point
 ```
-
-**API Integration:**
-
-Check the file  BACKEND.md for implementing api calls.
-
-- Backend calls go to `/api/my/{package}/{action}`
-
-- Dev server proxies `/api/my/*` to `OPS_HOST` or `OPSDEV_HOST` environment variable
-
-- Build outputs to `web/` directory for OpenServerless deployment
 
 ## Conventions
 
