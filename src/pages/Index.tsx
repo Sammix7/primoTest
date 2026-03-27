@@ -35,6 +35,11 @@ const Index = () => {
           <p className="animate-in fade-in duration-1000 delay-300 text-center text-sm text-muted-foreground">
             Powered by Trustable
           </p>
+
+          {/* Upcoming Features */}
+          <p className="animate-in fade-in duration-1000 delay-500 text-center text-xs text-muted-foreground/70 max-w-sm">
+            Upcoming in next releases: full support for AI, databases (SQL, NoSQL, vector), Redis and S3 with serverless backend
+          </p>
         </div>
       </div>
     </div>
