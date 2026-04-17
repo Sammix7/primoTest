@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 type Mode = "focus" | "shortBreak" | "longBreak";
 
@@ -76,6 +77,12 @@ const Pomodoro = () => {
       <div className="w-full max-w-md px-6">
         <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="rounded-2xl border bg-card p-8 shadow-elegant">
+            <Link to="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
+              <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Home
+            </Link>
             <h1 className="mb-6 text-2xl font-bold text-foreground text-center">
               Pomodoro Timer
             </h1>
