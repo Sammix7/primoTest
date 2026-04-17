@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Todo {
   id: number;
@@ -9,6 +9,28 @@ interface Todo {
 const Index = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [ipAddress, setIpAddress] = useState<string | null>(null);
+  const [ipLoading, setIpLoading] = useState(true);
+  const [ipError, setIpError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/my/v1/my-ip", { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.body?.ip) {
+          setIpAddress(data.body.ip);
+        } else if (data.body?.error) {
+          setIpError(data.body.error);
+        } else {
+          setIpError("Failed to fetch IP");
+        }
+        setIpLoading(false);
+      })
+      .catch((err) => {
+        setIpError(err.message);
+        setIpLoading(false);
+      });
+  }, []);
 
   const addTodo = () => {
     if (inputValue.trim()) {
@@ -38,6 +60,17 @@ const Index = () => {
       <div className="w-full max-w-md px-6">
         <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="rounded-2xl border bg-card p-8 shadow-elegant">
+            <div className="mb-6 rounded-lg bg-muted p-4">
+              <p className="text-sm text-muted-foreground">Your IP Address:</p>
+              {ipLoading ? (
+                <p className="text-lg font-semibold text-foreground">Loading...</p>
+              ) : ipError ? (
+                <p className="text-lg font-semibold text-destructive">{ipError}</p>
+              ) : (
+                <p className="text-lg font-semibold text-foreground">{ipAddress}</p>
+              )}
+            </div>
+
             <h1 className="mb-6 text-2xl font-bold text-foreground">
               Todo List
             </h1>
